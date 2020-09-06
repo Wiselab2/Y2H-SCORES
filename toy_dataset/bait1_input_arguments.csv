@@ -1,0 +1,19 @@
+argument_name,argument_description,required/optional,default_argument_value,argument_value
+input_ended,Specify whether the selected (input) samples are SE or PE. The pipeline will assume SE by default,1,SE,
+input_fullpath,Specify the name of theÊ selected sample (input) fastq files along with their entire path. File MUST end in fastq.,1,None,/bait1R1S.fastq;/bait1R2S.fastq;/bait1R3S.fastq
+background_ended,Specify whether the non-selected (background) samples are SE or PE. The pipeline will assume SE by default,1,SE,
+background_fullpath,Specify the names of the non-selected (background) sample files along with their entire path.,1,None,
+genome,"Specify the name of the genome fasta file of the organism. Please note that the program will not be able to handle multiple fasta files. If you have multiple fasta files, please concatenate them and put them in one file",1,,
+star_genome_index,Specify the directory where the STAR index of the genome is present. Please check the manual to see directions about how to generate STAR index. Please note that STAR takes a pretty long time to generate indices.,0,None,
+output_directory,Specify an output directory to which all the generated files will be housed. This includes the progress.log file which can be later checked. Please make sure that there are sufficient permissions to create the output directory. The program will throw an error if creation of the output directory fails. This directory will contain the summary file containing the details of the execution,1,None,toy_dataset/bait1
+plasmid_sequences,Specify a fasta file containing the two plasmid sequences - one of the bait and the other of the prey.,1,None,
+five_prime_vector,Enter the sequence of the 5 prime vector,1,None,
+three_prime_vector,Enter the sequence of the 3 prime vector,1,None,
+CPU,Provide the number of CPUs to be used,0,1,
+frame_of_TF_fusion,Enter the frame for the fusion of the transcription factor with the insert. Please refer to page no. of the manual. Pipeline assumes that 3-frame library has NOT been generated,0,0,
+nucleotide_for_frame_shift,Enter the nucleotide with which 3 frame generation has been done,0,None,
+min_trimmed_length,Please provide the minimum length of the sequence to keep post adapter trimming,1,15,
+force,Overwrites the output directory if it exists. Setting this flag will enforce the software to run all the steps.,1,0,
+clean_up,Set this to 1 if you wish to clean up all the intermediate files. The program will keep all temporary files by default.,0,0,
+gtf_annotation,Enter the full path of the gene-annotation file in GTF format,1,None,
+functional_annotation,Enter a tab delimited file of gene and its corresponding functional annotation,0,None,
