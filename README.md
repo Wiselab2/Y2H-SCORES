@@ -64,7 +64,7 @@ With the arguments:
 
 **Output**
 
-After running Y2H-SCORES there should be an output directory named as specified with the -out\_dir argument. This folder should have a file called Total\_scores.csv with the compilation of the three scores for every prey/bait combination.  The table should have the following columns: prey, bait, Enrichment score, Specificity score, *In-frame* score,                         *In-frame* Transcripts (list of transcripts that have the maximum *in-frame* score for each prey), Sum scores and Borda score.
+After running Y2H-SCORES there should be an output directory named as specified with the -out\_dir argument. This folder should have a file called Total\_scores.csv with the compilation of the three scores for every prey/bait combination.  The table should have the following columns: prey, bait, Enrichment score, Specificity score, *In-frame* score,                         *In-frame* prey transcripts (list of prey transcripts that have the maximum *in-frame* score for each prey), Sum scores and Borda score.
 
 To prioritize interactors use the ensemble scores given by the Borda score column. Alternatively, each of the three scores and their sum can be used as a guide. Higher values indicate more likely interactors.
 
@@ -99,4 +99,4 @@ In this example we are running the Y2H-SCORES with the arguments:
 
 -threshold_enrichment_score 0.5 the desired threshold for the p-values that are used to calculate the enrichment score. Smaller values indicate more stringent scores.
 ```
-After running the Y2H-SCORES software there will be a new folder in *toy\_example*  called *output\_toy_dataset*. This folder contains the *Total\_scores.csv* file with the compilation of the three scores and the columns: prey, bait, Enrichment score, Specificity score, *In-frame* score, In-frame Transcripts, Sum of scores and Borda scores.
+After running the Y2H-SCORES software there will be a new folder in *toy\_example*  called *output\_toy_dataset*. This folder contains the *Total\_scores.csv* file with the compilation of the three scores and the columns: prey, bait, Enrichment score, Specificity score, *In-frame* score, In-frame prey transcripts, Sum of scores and Borda scores.
