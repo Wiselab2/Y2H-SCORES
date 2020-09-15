@@ -2,7 +2,7 @@ argument_name,argument_description,required/optional,default_argument_value,argu
 input_ended,Specify whether the selected (input) samples are SE or PE. The pipeline will assume SE by default,1,SE,
 input_fullpath,Specify the name of theÊ selected sample (input) fastq files along with their entire path. File MUST end in fastq.,1,None,/bait1R1S.fastq;/bait1R2S.fastq;/bait1R3S.fastq
 background_ended,Specify whether the non-selected (background) samples are SE or PE. The pipeline will assume SE by default,1,SE,
-background_fullpath,Specify the names of the non-selected (background) sample files along with their entire path.,1,None,
+background_fullpath,Specify the names of the non-selected (background) sample files along with their entire path.,1,None,/bait1R1N.fastq;/bait1R2N.fastq;/bait1R3N.fastq
 genome,"Specify the name of the genome fasta file of the organism. Please note that the program will not be able to handle multiple fasta files. If you have multiple fasta files, please concatenate them and put them in one file",1,,
 star_genome_index,Specify the directory where the STAR index of the genome is present. Please check the manual to see directions about how to generate STAR index. Please note that STAR takes a pretty long time to generate indices.,0,None,
 output_directory,Specify an output directory to which all the generated files will be housed. This includes the progress.log file which can be later checked. Please make sure that there are sufficient permissions to create the output directory. The program will throw an error if creation of the output directory fails. This directory will contain the summary file containing the details of the execution,1,None,toy_dataset/bait1
