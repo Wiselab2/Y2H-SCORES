@@ -1,5 +1,5 @@
 ﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿
-# Instructions to run Y2H-SCORES
+#Instructions to run Y2H-SCORES
 
 This repository contains the software Y2H-SCORES published in  Velásquez-Zapata *et.al.* (2020) Y2H-SCORES: A statistical framework to infer protein-protein interactions from next-generation yeast-two-hybrid sequencing data.   
 
@@ -9,7 +9,7 @@ This manual describes how to operate Y2H-SCORES to prioritize candidate protein-
 
 Y2H-SCORES is an aggregate of three experimental outcomes: 1) the enrichment score measures the non-selected population as a baseline to detect which preys are significantly enriched under selection, 2) the specificity score uses selected samples as a control baseline to measure the specificity of a prey, and 3) the *in-frame* score makes use of the fusion read information to identify *in-frame* enrichment of the prey fragments under selection. 
 
-Y2H-SCORES has been submitted for peer review, but the preprint can be accessed from <>. Please refer to the manuscript for more details about each module. The entire pipeline has been coded in R.
+Y2H-SCORES has been submitted for peer review, but the preprint can be accessed from https://doi.org/10.1101/2020.09.08.288365. Please refer to the manuscript for more details about each module. The entire pipeline has been coded in R.
  
 **Citations**
 
@@ -109,10 +109,5 @@ In this example we are running the Y2H-SCORES with the arguments:
   Smaller values indicate more stringent scores.
 ```
 After running the Y2H-SCORES software there will be a new folder in *toy\_example*  called *output\_toy_dataset*. This folder contains the *Total\_scores.csv* file with the compilation of the three scores and the columns: prey, bait, Enrichment score, Specificity score, *In-frame* score, In-frame prey transcripts, Sum of scores and Borda scores.
-
-
-
-
-
 
 
