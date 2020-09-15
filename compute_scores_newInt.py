@@ -15,7 +15,7 @@ def parseCommandLineArguments():
     parser.add_argument("-threshold_fold_change","--threshold_fold_change",default=2,help="Minimum fold change for spec score")
     parser.add_argument("-threshold_enrichment_score","--threshold_enrichment_score",default=0.5,help="Minimum enrichment score")
     parser.add_argument("-out_dir","--out_dir",help="Enter the name of the output directory where all the results will be stored",required=True)
-    
+
     return parser.parse_args()
 
 def prepFilesForScoreComputation(options):
@@ -34,10 +34,11 @@ def prepFilesForScoreComputation(options):
     
     salmon_counts=[]
     bait_names_list=[]
-    num_of_replicates_list=[]
+    s_num_of_replicates_list=[]
     out_dir_list=[]
     final_reports_list=[]
     salmon_counts_list=[]
+    n_num_of_replicates_list=[]
     for eachbait in fofn:
         fhr=open(eachbait,"r")
         for line in fhr:
@@ -47,7 +48,9 @@ def prepFilesForScoreComputation(options):
                 final_reports_list.append(line.strip().split(",")[-1]+"/"+line.strip().split(",")[-1].split("/")[-1]+"_final_report.csv")
                 salmon_counts_list.append(line.strip().split(",")[-1]+"/"+line.strip().split(",")[-1].split("/")[-1]+"_salmon_counts.matrix")
             elif "input_fullpath" in line:
-                num_of_replicates_list.append(line.strip().split(",\"")[-1][:-1].count(";")+1)
+                s_num_of_replicates_list.append(line.strip().split(",\"")[-1][:-1].count(".fast"))
+            elif "background_fullpath" in line:
+                n_num_of_replicates_list.append(line.strip().split(",\"")[-1][:-1].count(".fast"))
         fhr.close()
     arguments_for_r_code=[]
     arguments_for_r_code.append(options.threshold_p_val)
@@ -57,7 +60,8 @@ def prepFilesForScoreComputation(options):
     arguments_for_r_code.append("::".join(salmon_counts_list))
     arguments_for_r_code.append("::".join(final_reports_list))
     arguments_for_r_code.append("::".join(bait_names_list))
-    arguments_for_r_code.append("::".join(map(str,num_of_replicates_list)))
+    arguments_for_r_code.append("::".join(map(str,s_num_of_replicates_list)))
+    arguments_for_r_code.append("::".join(map(str,n_num_of_replicates_list)))
     return arguments_for_r_code
 
 def runRCode(arguments_for_r_code):
