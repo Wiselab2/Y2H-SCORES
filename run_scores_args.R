@@ -1,6 +1,8 @@
 require(psych)
 require(reshape2)
 require(DESeq2)
+require(tidyverse)
+require(miRLAB)
 #require(doParallel)
 #parameters to be changed by the user
 args <- commandArgs()
@@ -14,6 +16,7 @@ final_reports_list<-strsplit(args[11],"::")[[1]]
 sample_names<-strsplit(args[12],"::")[[1]]
 s_num_replicates<-as.numeric(strsplit(args[13],"::")[[1]])
 n_num_replicates<-as.numeric(strsplit(args[14],"::")[[1]])
+names_s_replicates<-strsplit(args[15],"::")[[1]]
 location_folders<- getwd()
 dir.create(out_dir)
 print(p_val_thr_s)
@@ -28,6 +31,7 @@ print(str(s_num_replicates))
 print(n_num_replicates)
 print(str(n_num_replicates))
 print(location_folders)
+print(names_s_replicates)
 
 ############################################################################
 output_location<- out_dir
@@ -65,13 +69,17 @@ normalized_counts<-round(normalized_counts)
 # saveRDS(normalized_counts, paste0(output_location,"normalized_counts_salmon.RDS"))
 # saveRDS(normFactor, paste0(output_location,"normFactor_salmon.RDS"))
 # saveRDS(raw_counts, paste0(output_location,"raw_counts_salmon.RDS"))
-#normFactor<- readRDS(paste0(output_location,"normFactor_salmon.RDS"))
+# normFactor<- readRDS(paste0(output_location,"normFactor_salmon.RDS"))
 
 #run in frame
-if(sum(n_num_replicates)>0){
-  source(paste0(location_folders,"/in_frame_score.R"))
-  in_frame_results_sum<- calc_in_frame(normFactor, sample_names, final_reports_list, output_location)
-}
+source(paste0(location_folders,"/in_frame_score.R"))
+in_frame_results_sum<- calc_in_frame(normFactor, sample_names, final_reports_list, output_location, names_s_replicates)
+#saveRDS(in_frame_results_sum, paste0(output_location, "in_frame_results_sum.RDS"))
+
+# if(sum(n_num_replicates)>0){
+#   source(paste0(location_folders,"/in_frame_score.R"))
+#   in_frame_results_sum<- calc_in_frame(normFactor, sample_names, final_reports_list, output_location, names_s_replicates)
+# }
 # Run DESeq2 for enriched and specificity score
 condition<-c("S","N")
 cols<-data.frame(baits=rep(sample_names, (n_num_replicates+s_num_replicates)), 
@@ -92,12 +100,15 @@ dds <- DESeq(dds, quiet = TRUE, betaPrior=FALSE)
 
 #run enrich and spec
 if(sum(n_num_replicates)>0){
-source(paste0(location_folders,"/enrichment_score.R"))
-#dds<- readRDS(paste0(output_location,"dds.RDS"))
-enrichment_score_all_rel<- calculate_enrichment_score(dds, sample_names, p_val_thr, output_location)}
+  source(paste0(location_folders,"/enrichment_score.R"))
+  #dds<- readRDS(paste0(output_location,"dds.RDS"))
+  enrichment_score_all_rel<- calculate_enrichment_score(dds, sample_names, p_val_thr, output_location)
+  #saveRDS(enrichment_score_all_rel, paste0(output_location, "enrichment_score_all_rel.RDS"))
+}
 if(length(salmon_counts_list)>1){
   source(paste0(location_folders,"/spec_score.R"))
   spec_score_all_rel<- calc_spec_score(dds, sample_names, p_val_thr_s, fc_thr, output_location)
+  #saveRDS(spec_score_all_rel, paste0(output_location, "spec_score_all_rel.RDS"))
 }
 
 #combine
@@ -147,13 +158,29 @@ if(sum(n_num_replicates)>0 & length(salmon_counts_list)==1){
   colnames(inframe_mat)<- "conf"
   borda_scores<- Borda(list(enrich_mat, inframe_mat))
   total_scores$borda<- borda_scores[,1]
+  
   colnames(total_scores)<- c("prey", "bait", "Enrichment_score", "In_frame_score",
                              "In_frame_prey_transcripts", "Sum_scores", "Borda_scores")
 }
 if(sum(n_num_replicates)==0 & length(salmon_counts_list)>1){
-  total_scores <- spec_score_all_rel[,c("gene","bait","total_spec_score")]
+  total_scores <- merge(spec_score_all_rel[,c("gene","bait","total_spec_score")], 
+                        in_frame_results_sum[,c("gene","bait",colnameIF, "transcript")], by=c("gene", "bait"), all = T)
+  total_scores$sum_scores <- rowSums(total_scores[,c("total_spec_score", colnameIF)], na.rm=TRUE)
   #borda counts for the scores
-  colnames(total_scores)<- c("prey", "bait", "Specificity_score")
+  library(miRLAB)
+  total_scores[is.na(total_scores)]<- 0
+  rownames(total_scores)<- paste0(total_scores$gene,"_", total_scores$bait)
+  spec_mat<- as.matrix(x=total_scores$total_spec_score)
+  row.names(spec_mat)<- row.names(total_scores)
+  colnames(spec_mat)<- "conf"
+  inframe_mat<- as.matrix(x=total_scores$total_max_freq_score)
+  row.names(inframe_mat)<- row.names(total_scores)
+  colnames(inframe_mat)<- "conf"
+  borda_scores<- Borda(list(spec_mat, inframe_mat))
+  total_scores$borda<- borda_scores[,1]
+  
+  colnames(total_scores)<- c("prey", "bait", "Specificity_score", "In_frame_score",
+                             "In_frame_prey_transcripts", "Sum_scores", "Borda_scores")
 }
 
 write.csv(total_scores, paste0(output_location,"Total_scores.csv"), row.names = F)

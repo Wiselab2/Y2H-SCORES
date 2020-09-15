@@ -39,6 +39,7 @@ def prepFilesForScoreComputation(options):
     final_reports_list=[]
     salmon_counts_list=[]
     n_num_of_replicates_list=[]
+    s_name_of_replicates_list=[]
     for eachbait in fofn:
         fhr=open(eachbait,"r")
         for line in fhr:
@@ -49,6 +50,8 @@ def prepFilesForScoreComputation(options):
                 salmon_counts_list.append(line.strip().split(",")[-1]+"/"+line.strip().split(",")[-1].split("/")[-1]+"_salmon_counts.matrix")
             elif "input_fullpath" in line:
                 s_num_of_replicates_list.append(line.strip().split(",\"")[-1][:-1].count(".fast"))
+                l= line.strip().split(",")[-1].split(";")
+                s_name_of_replicates_list.append([i.split("/")[-1].split(".")[0] for i in l])
             elif "background_fullpath" in line:
                 n_num_of_replicates_list.append(line.strip().split(",\"")[-1][:-1].count(".fast"))
         fhr.close()
@@ -62,6 +65,7 @@ def prepFilesForScoreComputation(options):
     arguments_for_r_code.append("::".join(bait_names_list))
     arguments_for_r_code.append("::".join(map(str,s_num_of_replicates_list)))
     arguments_for_r_code.append("::".join(map(str,n_num_of_replicates_list)))
+    arguments_for_r_code.append("::".join(sum(s_name_of_replicates_list, [])))
     return arguments_for_r_code
 
 def runRCode(arguments_for_r_code):
