@@ -238,7 +238,7 @@ saveRDS(dds_list, paste0(output_location,"dds.RDS"))
 
 #run enrich and spec
 if(sum(n_num_replicates)>0){
-  source(paste0(location_folders,"/enrichment_score_groups.R"))
+  source(paste0(location_folders,"/enrichment_score.R"))
   #dds<- readRDS(paste0(output_location,"dds.RDS"))
   enrichment_score_all_rel<- calculate_enrichment_score(dds_list, sample_names, p_val_thr, fc_thr, output_location, groups)
   saveRDS(enrichment_score_all_rel, paste0(output_location, "enrichment_score_all_rel.RDS"))
@@ -246,7 +246,7 @@ if(sum(n_num_replicates)>0){
 if(length(salmon_counts_list)>1){
   #source(paste0(location_folders,"/spec_score.R"))
   #  spec_score_all_rel<- calc_spec_score(dds, sample_names, p_val_thr_s, fc_thr_s, output_location)
-  source(paste0(location_folders,"/spec_score_groups.R"))
+  source(paste0(location_folders,"/spec_score.R"))
   spec_score_all_rel<- calc_spec_score(dds_list, sample_names, p_val_thr_s, fc_thr_s, output_location, groups)
   saveRDS(spec_score_all_rel, paste0(output_location, "spec_score_all_rel.RDS"))
 }
