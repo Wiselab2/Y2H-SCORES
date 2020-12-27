@@ -1,4 +1,4 @@
-#Instructions to run the toy dataset for Y2H-SCORES
+# Instructions to run the toy dataset for Y2H-SCORES
 
 In this repository you will find the instructions to run the toy dataset of the software Y2H-SCORES published in  Velásquez-Zapata *et.al.* (2020) Y2H-SCORES: A statistical framework to infer protein-protein interactions from next-generation yeast-two-hybrid sequencing data.   
 
