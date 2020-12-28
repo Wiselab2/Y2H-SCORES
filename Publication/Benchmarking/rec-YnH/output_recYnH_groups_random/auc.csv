@@ -1,0 +1,2 @@
+"","ROC_AUC_Borda","ROC_AUC_Specificity","ROC_AUC_Enrichment","ROC_AUC_rec_Y2H","PR_AUC_Borda","PR_AUC_Specificity","PR_AUC_Enrichment","PR_AUC_rec_Y2H","sample"
+"1",0.58,0.58,0.57,0.51,0.709419924251971,0.713008246702995,0.688035278328981,0.723363564711675,"rec-YnH"
