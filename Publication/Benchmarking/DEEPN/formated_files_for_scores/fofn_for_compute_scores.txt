@@ -1,0 +1,5 @@
+DEEPN/formated_files_for_scores/DEEPN_EMPTY_input_arguments.csv
+DEEPN/formated_files_for_scores/DEEPN_Rab5GDP_input_arguments.csv
+DEEPN/formated_files_for_scores/DEEPN_Rab5GTP_input_arguments.csv
+DEEPN/formated_files_for_scores/DEEPN_diUb1_input_arguments.csv
+DEEPN/formated_files_for_scores/DEEPN_di4spUb_input_arguments.csv
