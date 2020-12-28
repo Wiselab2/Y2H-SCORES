@@ -309,7 +309,7 @@ for (i in 1:nrow(scenarios)) { #nrow(scenarios)
   fc_thr<-2
   num_replicates<- rep(num_rep,length(sample_names))
   norm_plots<-T
-  source(paste0(location_folders,"run_scores.R"))
+  source(paste0(location_folders,"run_scores_srcFun.R"))
   run_scores(sample_names, num_replicates, input_files_location, location_folders, out_dir, p_val_thr, p_val_thr_s, fc_thr, norm_plots)
   #see performance
   auc<- performance(input_files_location, out_dir)
