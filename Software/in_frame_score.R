@@ -86,8 +86,11 @@ calc_in_frame<- function(normFactor, sample_names, file_list, output_location, s
     match <- sample_names[num]
     if(!(match %in% names(table))){
       t <- calculate_score(filter_data(read.csv(file_list[num],header = TRUE), normFactor_df))
-      t_sum <- t %>% group_by(gene) %>% summarise(total_max_freq_score=max(freq_score),
+      t_sum <- t %>% group_by(gene) %>% filter(num_junction_reads_in_frame_s> max(num_junction_reads_in_frame_s)/2) %>% summarise(total_max_freq_score=max(freq_score),
                                                   transcript= paste(Transcript_id[which(freq_score == max(freq_score))], collapse = ","))
+      
+      # t_sum <- t %>% group_by(gene) %>% summarise(total_max_freq_score=max(freq_score),
+      #                                             transcript= paste(Transcript_id[which(freq_score == max(freq_score))], collapse = ","))
       
       table_results[[match]]<- t
       table_results[[match]]$bait<- match
