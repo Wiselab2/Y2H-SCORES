@@ -15,5 +15,5 @@ If you use Y2H-SCORES, please cite
 
 * Velásquez-Zapata V, Elmore JM, Banerjee S, Dorman KS, Wise RP. 2020. Y2H-SCORES: A statistical framework to infer protein-protein interactions from next-generation yeast-two-hybrid sequence data. PLOS Computational Biology (submitted). bioRxiv https://doi.org/10.1101/2020.09.08.288365
 
-* Banerjee, S., Velasquez-Zapata, V., Fuerst, G., Elmore, J.M. and Wise, R.P. (2021) NGPINT: A Next-generation protein-protein interaction software. Breifings Bioinforma., 22, in press. Available at: http://biorxiv.org/content/early/2020/09/12/2020.09.11.277483.abstract
+* Banerjee, S., Velásquez-zapata, V., Elmore, J.M., Wise, R.P. and Fuerst, G. (2020) NGPINT: a next-generation protein–protein interaction software. Brief. Bioinform., 00, 1–14. Available at: https://doi.org/10.1093/bib/bbaa351.
 
