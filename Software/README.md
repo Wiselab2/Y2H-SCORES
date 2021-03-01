@@ -31,7 +31,7 @@ For Linux/Mac operating systems, in the terminal:
 git clone https://github.com/Wiselab2/Y2H-SCORES/Software 
 ```
 
-In Windows download the folder from https://github.com/Wiselab2/Y2H-SCORES/Software.
+In Windows download the folder from https://github.com/Wiselab2/Y2H-SCORES/tree/master/Software.
 
 **Running Y2H-SCORES**
 
