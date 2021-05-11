@@ -14,9 +14,9 @@ Y2H-SCORES has been submitted for peer review, but the preprint can be accessed 
 
 If you use Y2H-SCORES, please cite  
 
-* Velásquez-Zapata V, Elmore JM, Banerjee S, Dorman KS, Wise RP. 2020. Y2H-SCORES: A statistical framework to infer protein-protein interactions from next-generation yeast-two-hybrid sequence data. PLOS Computational Biology (submitted). bioRxiv doi: https://doi.org/10.1101/2020.09.08.288365
+* Valeria Velásquez-Zapata, J Mitch Elmore, Sagnik Banerjee, Karin S Dorman, Roger P Wise (2021) Next-generation yeast-two-hybrid analysis with Y2H-SCORES identifies novel interactors of the MLA immune receptor. PLoS Comput Biol 17(4): e1008890. https://doi.org/10.1371/journal.pcbi.1008890
 
-* Banerjee, S., Velásquez-zapata, V., Elmore, J.M., Wise, R.P. and Fuerst, G. (2020) NGPINT: a next-generation protein–protein interaction software. Brief. Bioinform., 00, 1–14. Available at: https://doi.org/10.1093/bib/bbaa351
+* Sagnik Banerjee, Valeria Velásquez-Zapata, Gregory Fuerst, J Mitch Elmore, Roger P Wise (2020) NGPINT: a next-generation protein–protein interaction software. Briefings in Bioinformatics: bbaa351, https://doi.org/10.1093/bib/bbaa351
 
 **Software requirements**
 
