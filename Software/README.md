@@ -1,6 +1,6 @@
 # Instructions to run Y2H-SCORES
 
-This repository contains the software Y2H-SCORES published in  Velásquez-Zapata *et.al.* (2020) Y2H-SCORES: A statistical framework to infer protein-protein interactions from next-generation yeast-two-hybrid sequencing data.   
+This repository contains the software Y2H-SCORES published in  Velásquez-Zapata *et.al.* (2021) Next-generation yeast-two-hybrid analysis with Y2H-SCORES identifies novel interactors of the MLA immune receptor.   
 
 **Overview**
 
@@ -8,7 +8,7 @@ This manual describes how to operate Y2H-SCORES to prioritize candidate protein-
 
 Y2H-SCORES is an aggregate of three experimental outcomes: 1) the enrichment score measures the non-selected population as a baseline to detect which preys are significantly enriched under selection, 2) the specificity score uses selected samples as a control baseline to measure the specificity of a prey, and 3) the *in-frame* score makes use of the fusion read information to identify *in-frame* enrichment of the prey fragments under selection. 
 
-Y2H-SCORES has been submitted for peer review, but the preprint can be accessed from https://doi.org/10.1101/2020.09.08.288365. Please refer to the manuscript for more details about each module. The entire pipeline has been coded in R.
+Y2H-SCORES has been published in PLoS Computational Biology, it can be accessed from https://doi.org/10.1371/journal.pcbi.1008890. Please refer to the paper for more details about each module. The entire pipeline has been coded in R.
 
 **Citations**
 
