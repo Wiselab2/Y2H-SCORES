@@ -108,7 +108,7 @@ To run Y2H-SCORES with the toy dataset in Linux/Mac use the terminal and in Wind
 
 ```
 cd Y2H-SCORES/Software
-Rscript run_scores_args_groups_se.R --fofn "toy_dataset/fofn_for_compute_scores.txt" --out_dir "output_toy_dataset/" --spec_p_val 0.5 --spec_fold_change 2 --enrich_p_val 0.5 --enrich_fold_change 0 --normalized F
+Rscript run_scores.R --fofn "toy_dataset/fofn_for_compute_scores.txt" --out_dir "output_toy_dataset/" --spec_p_val 0.5 --spec_fold_change 2 --enrich_p_val 0.5 --enrich_fold_change 0 --normalized F
 ```
 
 In this example we are running the Y2H-SCORES with the arguments:
