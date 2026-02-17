@@ -28,7 +28,7 @@ If you use Y2H-SCORES, please cite
 For Linux/Mac operating systems, in the terminal: 
 
 ```
-git clone https://github.com/Wiselab2/Y2H-SCORES/Software 
+git clone https://github.com/vvelasqz/Y2H-SCORES.git
 ```
 
 In Windows download the folder from https://github.com/Wiselab2/Y2H-SCORES/tree/master/Software.
@@ -133,4 +133,5 @@ In this example we are running the Y2H-SCORES with the arguments:
 ```
 
 After running the Y2H-SCORES software there will be a new folder in *toy\_example*  called *output\_toy_dataset*. This folder contains the *Total\_scores.csv* file with the compilation of the three scores and the columns: prey, bait, Enrichment score, Specificity score, *In-frame* score, In-frame prey transcripts, Sum of scores and Borda scores.
+
 
