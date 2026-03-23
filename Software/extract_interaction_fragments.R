@@ -1,7 +1,7 @@
 #get interacting sequence script
 #  interacting_fragments<- get_interaction_files(fasta_list, sample_names, final_reports_list, output_location)
 
-get_interaction_files<- function(fasta_list, total_scores, sample_names, final_reports_list, output_location, thr=1.5){
+get_interaction_files<- function(fasta_list, total_scores, sample_names, final_reports_list, output_location, thr=0){
   require(tidyverse)
   require(Biostrings)
   
@@ -51,7 +51,11 @@ get_interaction_files<- function(fasta_list, total_scores, sample_names, final_r
       }
     }
     
-    final_report_filtered<- final_report[final_report$Gene %in% total_scores_sample[total_scores_sample$Sum_scores>thr, "prey"],]
+    #final_report_filtered<- final_report[final_report$Gene %in% total_scores_sample[total_scores_sample$Sum_scores>thr, "prey"],]
+    
+    final_report_filtered<- final_report[final_report$Gene %in% total_scores_sample[total_scores_sample$Sum_scores>thr, "prey"] &
+                                          final_report$num_fusion_reads_selected_sample>0 & final_report$num_fusion_reads_background_sample>0,]
+    
     
     fasta_name<- paste0(final_report_filtered$Transcript_id, "_", final_report_filtered$Replicate)
     final_report_filtered$fasta_name<- paste0(final_report_filtered$Transcript_id, "_", final_report_filtered$Replicate)
