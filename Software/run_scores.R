@@ -26,7 +26,7 @@ option_list = list(
               help="Enter the name of the output directory where all the results will be stored."),
   make_option("--normalized", type="logical", default=F, 
               help="Enter if the count files are already normalized [default= %default]. Default implements lib size normalization"),
-  make_option("--Score_threshold", type="double", default=1.5, 
+  make_option("--Score_threshold", type="double", default=0, 
               help="Minimum Sum of Score threshold to extract interacting sequence [default= %default]")
 ); 
 
