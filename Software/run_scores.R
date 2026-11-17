@@ -105,7 +105,13 @@ names_s_replicates<-unlist(s_name_rep)
 names_s_replicates<- gsub('.fastq.*','', gsub('.*\\/','',names_s_replicates))
 
 
-location_folders<- getwd()
+cmd_args <- commandArgs(trailingOnly = FALSE)
+file_arg <- grep("^--file=", cmd_args, value = TRUE)
+if (length(file_arg) > 0) {
+  location_folders <- dirname(normalizePath(sub("^--file=", "", file_arg[1])))
+} else {
+  location_folders <- getwd()
+}
 dir.create(out_dir)
 print("Checking parameters for running Y2H-SCORES")
 print(paste0("Specificity p-value threshold: ", p_val_thr_s))
