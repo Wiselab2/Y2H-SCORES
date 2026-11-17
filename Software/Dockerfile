@@ -1,13 +1,25 @@
 FROM bioconductor/bioconductor_docker:RELEASE_3_18
 
-# Install required CRAN packages
-RUN R -e "install.packages(c('psych', 'reshape2', 'tidyverse', 'optparse'), repos='https://cloud.r-project.org')"
+# Install system libraries required by tidyverse (ragg/textshaping/xml2) and Bioconductor packages
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    libfontconfig1-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff-dev \
+    libjpeg-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install required Bioconductor packages
-RUN R -e "BiocManager::install(c('DESeq2', 'Biostrings'))"
+# Install required CRAN and Bioconductor packages using a Posit Package Manager
+# binary snapshot aligned with Bioconductor 3.18 / R 4.3 (Ubuntu 22.04 Jammy)
+RUN Rscript -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/__linux__/jammy/2024-04-30')); BiocManager::install(c('psych', 'reshape2', 'tidyverse', 'optparse', 'DESeq2', 'Biostrings'), update = FALSE, ask = FALSE)"
 
 # Verify all required R packages installed and load cleanly
-RUN Rscript -e "invisible(lapply(c('psych', 'reshape2', 'tidyverse', 'optparse', 'DESeq2', 'Biostrings', 'MASS'), library, character.only = TRUE))"
+RUN Rscript -e "pkgs <- c('psych', 'reshape2', 'tidyverse', 'optparse', 'DESeq2', 'Biostrings', 'MASS'); missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]; if (length(missing)) stop('Missing R packages: ', paste(missing, collapse = ', ')); invisible(lapply(pkgs, library, character.only = TRUE))"
 
 # Create a directory for the scripts
 RUN mkdir -p /opt/Y2H-SCORES
