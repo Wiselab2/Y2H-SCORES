@@ -148,14 +148,16 @@ Container images with R and all required CRAN/Bioconductor dependencies pre-inst
 
 ### 1. Using Docker (Pre-built Image from GHCR)
 
-#### Pull the image
+#### Pull and tag the image
+Pull the image from GHCR and give it a short local tag (`y2h_scores`) for cleaner commands:
 ```bash
-docker pull ghcr.io/vvelasqz/y2h-scores:latest
+docker pull ghcr.io/wiselab2/y2h-scores:latest
+docker tag ghcr.io/wiselab2/y2h-scores:latest y2h_scores
 ```
 
 #### Check CLI options
 ```bash
-docker run --rm ghcr.io/vvelasqz/y2h-scores:latest --help
+docker run --rm y2h_scores --help
 ```
 
 #### Run on the toy dataset
@@ -167,7 +169,7 @@ cd Y2H-SCORES/Software
 docker run --rm \
   -v "$(pwd):/data" \
   -w /data \
-  ghcr.io/vvelasqz/y2h-scores:latest \
+  y2h_scores \
   --fofn "toy_dataset/fofn_for_compute_scores.txt" \
   --out_dir "output_toy_dataset/" \
   --spec_p_val 0.5 \
@@ -184,7 +186,7 @@ If your configuration and NGPINT output files use absolute host paths (e.g., und
 docker run --rm \
   -v "/path/to/project:/path/to/project" \
   -w "/path/to/project" \
-  ghcr.io/vvelasqz/y2h-scores:latest \
+  y2h_scores \
   --fofn "/path/to/project/fofn_for_compute_scores.txt" \
   --out_dir "/path/to/project/scores_output/" \
   --spec_p_val 0.05 \
@@ -202,11 +204,11 @@ If you want to build the Docker image locally from `Software/Dockerfile`:
 
 ```bash
 # From the repository root:
-docker build -t y2h-scores:local ./Software
+docker build -t y2h_scores ./Software
 
 # Or from inside Software/:
 cd Y2H-SCORES/Software
-docker build -t y2h-scores:local .
+docker build -t y2h_scores .
 ```
 
 Run the locally built image the same way:
@@ -217,7 +219,7 @@ cd Y2H-SCORES/Software
 docker run --rm \
   -v "$(pwd):/data" \
   -w /data \
-  y2h-scores:local \
+  y2h_scores \
   --fofn "toy_dataset/fofn_for_compute_scores.txt" \
   --out_dir "output_toy_dataset/" \
   --spec_p_val 0.5 \
@@ -235,18 +237,18 @@ You can either pull the pre-built native `.sif` image directly from GHCR via ORA
 
 #### Option A: Pull the pre-built `.sif` via ORAS (Recommended)
 ```bash
-apptainer pull y2h_scores.sif oras://ghcr.io/vvelasqz/y2h-scores-sif:latest
+apptainer pull y2h_scores.sif oras://ghcr.io/wiselab2/y2h-scores-sif:latest
 ```
 
 #### Option B: Build a `.sif` from the GHCR Docker image
 ```bash
-apptainer build y2h_scores.sif docker://ghcr.io/vvelasqz/y2h-scores:latest
+apptainer build y2h_scores.sif docker://ghcr.io/wiselab2/y2h-scores:latest
 ```
 
 #### Option C: Build a `.sif` from a local Docker daemon image
-If you built `y2h-scores:local` locally with Docker:
+If you tagged or built `y2h_scores` locally with Docker:
 ```bash
-apptainer build y2h_scores.sif docker-daemon://y2h-scores:local
+apptainer build y2h_scores.sif docker-daemon://y2h_scores:latest
 ```
 
 ---
@@ -296,7 +298,7 @@ apptainer run \
 Apptainer can also execute the remote ORAS or Docker image directly (caching it in `~/.apptainer/cache`):
 
 ```bash
-apptainer run oras://ghcr.io/vvelasqz/y2h-scores-sif:latest --help
+apptainer run oras://ghcr.io/wiselab2/y2h-scores-sif:latest --help
 ```
 
 
