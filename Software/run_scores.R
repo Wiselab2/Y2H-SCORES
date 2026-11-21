@@ -4,6 +4,7 @@ require(DESeq2)
 require(tidyverse)
 #require(miRLAB)
 require(optparse)
+require(Biostrings)
 #require(doParallel)
 #parameters to be changed by the user
 
@@ -24,7 +25,9 @@ option_list = list(
   make_option("--out_dir", type="character", default=NULL, 
               help="Enter the name of the output directory where all the results will be stored."),
   make_option("--normalized", type="logical", default=F, 
-              help="Enter if the count files are already normalized [default= %default]. Default implements lib size normalization")
+              help="Enter if the count files are already normalized [default= %default]. Default implements lib size normalization"),
+  make_option("--Score_threshold", type="double", default=0, 
+              help="Minimum Sum of Score threshold to extract interacting sequence [default= %default]")
 ); 
 
 opt_parser = OptionParser(option_list=option_list);
@@ -64,6 +67,7 @@ fc_thr<-as.numeric(opt$enrich_fold_change)
 out_dir<-opt$out_dir
 spec_groups<- opt$spec_groups
 normalized<- opt$normalized
+score_thr<- opt$Score_threshold
 
 config_files <- scan(opt$fofn, what = character())
 #config_files <- scan("~/iowa_state/lab/Y2H publication/second_submission/paper_datasets/DEEPN/formated_files_for_scores/fofn_for_compute_scores.txt", what = character())
@@ -72,6 +76,7 @@ report<- list()
 s_n_rep<- list()
 n_n_rep<- list()
 s_name_rep<- list()
+fasta<- list()
 
 for(file in config_files){
   bait_config<- read.csv(file)
@@ -80,6 +85,7 @@ for(file in config_files){
   
   salmon[[bait_name]]<- paste0(bait_config[7,"argument_value"], "/", bait_name, "_salmon_counts.matrix")
   report[[bait_name]]<- paste0(bait_config[7,"argument_value"], "/", bait_name, "_final_report.csv")
+  fasta[[bait_name]]<-  paste0(bait_config[7,"argument_value"], "/", bait_name, "_transcriptome_file_for_primer_design.fasta")
   s_n_rep[[bait_name]]<- length(str_split(bait_config[2,"argument_value"], ";")[[1]])
   if(is.na(bait_config[4,"argument_value"]) | bait_config[4,"argument_value"]==""){
     n_n_rep[[bait_name]]<- 0
@@ -91,6 +97,7 @@ for(file in config_files){
 
 salmon_counts_list<-unlist(salmon)
 final_reports_list<-unlist(report)
+fasta_list<- unlist(fasta)
 sample_names<-names(salmon)
 s_num_replicates<-unlist(s_n_rep)
 n_num_replicates<-unlist(n_n_rep)
@@ -98,7 +105,13 @@ names_s_replicates<-unlist(s_name_rep)
 names_s_replicates<- gsub('.fastq.*','', gsub('.*\\/','',names_s_replicates))
 
 
-location_folders<- getwd()
+cmd_args <- commandArgs(trailingOnly = FALSE)
+file_arg <- grep("^--file=", cmd_args, value = TRUE)
+if (length(file_arg) > 0) {
+  location_folders <- dirname(normalizePath(sub("^--file=", "", file_arg[1])))
+} else {
+  location_folders <- getwd()
+}
 dir.create(out_dir)
 print("Checking parameters for running Y2H-SCORES")
 print(paste0("Specificity p-value threshold: ", p_val_thr_s))
@@ -110,6 +123,8 @@ print("Salmon counts:")
 print(salmon_counts_list)
 print("Fusion counts:")
 print(final_reports_list)
+print("fasta:")
+print(fasta_list)
 print("Sample names:")
 print(sample_names)
 print("Number of replicates for selected samples:")
@@ -147,7 +162,7 @@ for(sample_num in 1:length(sample_names)){
   {
     raw_counts<-raw_counts_per_sample
   }else{
-    raw_counts<-cbind(raw_counts,raw_counts_per_sample)
+    raw_counts<-cbind(raw_counts,raw_counts_per_sample[rownames(raw_counts),])
   }
 }
 rm(raw_counts_per_sample)
@@ -168,6 +183,8 @@ normalized_counts<-round(normalized_counts)
 saveRDS(normalized_counts, paste0(output_location,"normalized_counts_salmon.RDS"))
 saveRDS(normFactor, paste0(output_location,"normFactor_salmon.RDS"))
 saveRDS(raw_counts, paste0(output_location,"raw_counts_salmon.RDS"))
+saveRDS(sample_names, paste0(output_location, "sample_names.RDS"))
+saveRDS(names_s_replicates, paste0(output_location, "names_s_replicates.RDS"))
 
 if(!is.null(spec_groups)){
   spec_groups <- scan(spec_groups, what = list(name=character()))
@@ -184,10 +201,10 @@ if(!is.null(spec_groups)){
 
 #run in frame
 if(file.exists(final_reports_list[1])){
+  saveRDS(final_reports_list, paste0(output_location, "final_reports_list.RDS"))
   source(paste0(location_folders,"/in_frame_score.R"))
   in_frame_results_sum<- calc_in_frame(normFactor, sample_names, final_reports_list, output_location, names_s_replicates)
   saveRDS(in_frame_results_sum, paste0(output_location, "in_frame_results_sum.RDS"))
-  
 }
 
 # if(sum(n_num_replicates)>0){
@@ -214,12 +231,50 @@ run_DESeq2 = function(dds){tryCatch(DESeq(dds, quiet = TRUE, betaPrior=FALSE),
                                       dds<- nbinomWaldTest(dds)})}
 
 dds_list<- list()
+rld_list<- list()
+
+pdf(paste0(output_location,"PCA.pdf"), width = 20, height = 20, fonts = "ArialMT", pointsize = 26)
 for(g in 1:length(groups)){
   dds_list[[g]]<- DESeqDataSetFromMatrix(countData = raw_counts[,rownames(cols[cols$baits %in% groups[[g]],])], 
                                          colData = cols[cols$baits %in% groups[[g]], ], design = ~ group)
   sizeFactors(dds_list[[g]]) <- normFactor[names(normFactor) %in% rownames(cols[cols$baits %in% groups[[g]],])]
   dds_list[[g]]<- run_DESeq2(dds_list[[g]])
+  
+  #PCA plot
+  rld_list[[g]] <- vst(dds_list[[g]])
+  print(plotPCA(rld_list[[g]], intgroup = "group"))
+  print(plotPCA(rld_list[[g]], intgroup = "conditions"))
 }
+dev.off()
+
+#PCA plot
+# rld <- vst(dds[[1]])
+# pdf("~/iowa_state/lab/Y2H-Seq_effectors/24_samples 2 run/PCA_plots_1st_run.pdf", width = 10, height = 10, fonts = "ArialMT", pointsize = 26)
+#   print(plotPCA(rld, intgroup = "group"))
+#   print(plotPCA(rld, intgroup = "conditions"))
+# dev.off()
+
+# colData(dds[[g]])
+# 
+# rld <- rlog(dds[[g]])
+# plotPCA(rld, intgroup = "group")
+# plotPCA(rld_list[[1]], intgroup = "group")
+#plotPCA(rld_list[[1]], intgroup = "conditions")
+#plotPCA(rld_list[[1]], intgroup = "group")
+# p<-plotPCA(rld_list[[1]], intgroup = "group")
+# p1<- p[["data"]]
+# library(utf8)
+# pdf("PCA_arab_plots.pdf", width = 6, height = 6, fonts = "ArialMT", pointsize = 26, encoding = "UTF-8")
+#   plotPCA(rld, intgroup = "group")
+# dev.off()
+# 
+# 
+# pdf("~/iowa_state/lab/Y2H-Seq_effectors/24_samples 2 run/PCA_plots.pdf", width = 10, height = 10, fonts = "ArialMT", pointsize = 26)
+# for(g in 1:length(groups)){
+#   print(plotPCA(rld_list[[1]], intgroup = "group"))
+#   print(plotPCA(rld_list[[1]], intgroup = "conditions"))
+# }
+# dev.off()
 
 # dds=DESeqDataSetFromMatrix(countData = raw_counts, colData = cols, design = ~ group)
 # sizeFactors(dds) <- normFactor
@@ -235,8 +290,14 @@ for(g in 1:length(groups)){
 
 #Now the contrasts between genotypes and timepoints https://support.bioconductor.org/p/67600/#67612
 saveRDS(dds_list, paste0(output_location,"dds.RDS"))
+saveRDS(rld_list, paste0(output_location,"rld_list.RDS"))
+
+
 
 #run enrich and spec
+
+#p_val_thr_s<- 0.05
+#fc_thr<- 0.5
 if(sum(n_num_replicates)>0){
   source(paste0(location_folders,"/enrichment_score.R"))
   #dds<- readRDS(paste0(output_location,"dds.RDS"))
@@ -255,6 +316,11 @@ if(length(salmon_counts_list)>1){
 # in_frame_results_sum<- readRDS(paste0(output_location,"in_frame_results_sum.RDS"))
 # enrichment_score_all_rel<- readRDS(paste0(output_location,"enrichment_score_all_rel.RDS"))
 # spec_score_all_rel<- readRDS(paste0(output_location,"spec_score_all_rel.RDS"))
+
+# p_val_thr_s<- 0.01
+# fc_thr<- 0.5
+# spec_score_all_rel<- readRDS(paste0(output_location,"spec_score_all_rel_pval_", p_val_thr_s, "_fc_",fc_thr,".RDS"))
+
 
 Borda<- function (listCEmatrices) 
 {
@@ -284,6 +350,7 @@ Borda<- function (listCEmatrices)
 
 colnameIF<- "total_max_freq_score"
 if(sum(n_num_replicates)>0 & length(salmon_counts_list)>1 & file.exists(final_reports_list[1])){
+#if(sum(n_num_replicates)>0 & length(salmon_counts_list)>1){
   total_scores <- merge(enrichment_score_all_rel[, c("gene","bait","total_bait_enrich_score")], 
                         spec_score_all_rel[,c("gene","bait","total_spec_score")], by=c("gene", "bait"), all = T)
   total_scores <- merge(total_scores, in_frame_results_sum[,c("gene","bait",colnameIF, "transcript")],
@@ -367,6 +434,21 @@ if(sum(n_num_replicates)>0 & length(salmon_counts_list)>1 & !file.exists(final_r
   total_scores$borda<- borda_scores[,1]
   colnames(total_scores)<- c("prey", "bait", "Enrichment_score", "Specificity_score", "Sum_scores", "Borda_scores")
 }
+
+#write.csv(total_scores, paste0(output_location,"Total_scores_pval_", p_val_thr_s, "_fc_",fc_thr,".csv"), row.names = F)
+
+
 write.csv(total_scores, paste0(output_location,"Total_scores.csv"), row.names = F)
 saveRDS(total_scores, paste0(output_location,"total_scores.RDS"))
+
+#generate inframe fragments with interacting preys
+#run in frame
+if(file.exists(fasta_list[1]) & file.exists(final_reports_list[1])){
+  saveRDS(fasta_list, paste0(output_location, "fasta_list.RDS"))
+  source(paste0(location_folders,"/extract_interaction_fragments.R"))
+  interacting_fragments<- get_interaction_files(fasta_list, total_scores, sample_names, final_reports_list, output_location, thr=score_thr)
+  #saveRDS(interacting_fragments, paste0(output_location, "interacting_fragments.RDS"))
+}
+
+
 

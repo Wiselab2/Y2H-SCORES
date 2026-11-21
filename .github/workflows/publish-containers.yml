@@ -1,0 +1,152 @@
+name: Build and Publish Containers
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "Software/**"
+      - ".github/workflows/publish-containers.yml"
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "Software/**"
+      - ".github/workflows/publish-containers.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  docker:
+    name: Build & Publish Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+      digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set lowercase image name
+        id: image
+        run: |
+          echo "name=$(echo "${REGISTRY}/${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          flavor: |
+            latest=auto
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Software
+          file: ./Software/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Disable attestation manifests for broad Apptainer/Singularity compatibility
+          provenance: false
+          sbom: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  apptainer:
+    name: Build & Publish Apptainer SIF
+    needs: docker
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Set up Apptainer
+        uses: eWaterCycle/setup-apptainer@v3
+
+      - name: Extract SIF metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ needs.docker.outputs.image }}-sif
+          flavor: |
+            latest=auto
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Log in to GitHub Container Registry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${GITHUB_TOKEN}" | apptainer registry login --username "${GITHUB_ACTOR}" --password-stdin "docker://${REGISTRY}"
+          echo "${GITHUB_TOKEN}" | apptainer registry login --username "${GITHUB_ACTOR}" --password-stdin "oras://${REGISTRY}"
+
+      - name: Build Apptainer SIF from Docker image
+        env:
+          DOCKER_IMAGE: ${{ needs.docker.outputs.image }}
+          DOCKER_DIGEST: ${{ needs.docker.outputs.digest }}
+        run: |
+          apptainer build y2h_scores.sif "docker://${DOCKER_IMAGE}@${DOCKER_DIGEST}"
+
+      - name: Smoke test Apptainer SIF
+        run: |
+          SIF_PATH="$(pwd)/y2h_scores.sif"
+          (cd /tmp && apptainer run "${SIF_PATH}" --help)
+          apptainer exec "${SIF_PATH}" Rscript -e "invisible(lapply(c('psych', 'reshape2', 'tidyverse', 'optparse', 'DESeq2', 'Biostrings', 'MASS'), library, character.only = TRUE))"
+          (cd /tmp && apptainer exec "${SIF_PATH}" Rscript -e "stopifnot(all(file.exists(file.path('/opt/Y2H-SCORES', c('run_scores.R', 'in_frame_score.R', 'enrichment_score.R', 'spec_score.R', 'extract_interaction_fragments.R')))))")
+
+      - name: Push Apptainer SIF to GHCR
+        env:
+          SIF_TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          PUSH_ARGS=()
+          if apptainer push --help 2>&1 | grep -q -- '--annotation'; then
+            PUSH_ARGS+=(--annotation "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}")
+            PUSH_ARGS+=(--annotation "org.opencontainers.image.revision=${GITHUB_SHA}")
+            PUSH_ARGS+=(--annotation "org.opencontainers.image.description=Apptainer SIF container for Y2H-SCORES")
+          fi
+
+          while IFS= read -r tag; do
+            [ -z "${tag}" ] && continue
+            echo "Pushing y2h_scores.sif to oras://${tag}"
+            apptainer push "${PUSH_ARGS[@]}" y2h_scores.sif "oras://${tag}"
+          done <<< "${SIF_TAGS}"

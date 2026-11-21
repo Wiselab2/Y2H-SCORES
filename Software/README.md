@@ -28,7 +28,7 @@ If you use Y2H-SCORES, please cite
 For Linux/Mac operating systems, in the terminal: 
 
 ```
-git clone https://github.com/Wiselab2/Y2H-SCORES/Software 
+git clone https://github.com/vvelasqz/Y2H-SCORES.git
 ```
 
 In Windows download the folder from https://github.com/Wiselab2/Y2H-SCORES/tree/master/Software.
@@ -133,4 +133,173 @@ In this example we are running the Y2H-SCORES with the arguments:
 ```
 
 After running the Y2H-SCORES software there will be a new folder in *toy\_example*  called *output\_toy_dataset*. This folder contains the *Total\_scores.csv* file with the compilation of the three scores and the columns: prey, bait, Enrichment score, Specificity score, *In-frame* score, In-frame prey transcripts, Sum of scores and Borda scores.
+
+---
+
+## Running Y2H-SCORES with Containers (Docker & Apptainer / SIF)
+
+Container images with R and all required CRAN/Bioconductor dependencies pre-installed are automatically built and published to the GitHub Container Registry (GHCR). The container entrypoint runs `run_scores` directly (`Rscript /opt/Y2H-SCORES/run_scores.R`), so you only need to pass the `run_scores.R` command-line flags.
+
+> **Important path notes when using containers:**
+> * **Trailing slash on `--out_dir`:** Always include a trailing `/` on `--out_dir` (e.g., `--out_dir "output_toy_dataset/"`), because `run_scores.R` concatenates output filenames directly onto the `--out_dir` string.
+> * **Paths inside `--fofn` and bait config CSVs:** All paths listed in your `--fofn` file and in the `output_directory` row of each `*_input_arguments.csv` file must be accessible inside the container (relative to your working directory or inside a mounted path).
+
+---
+
+### 1. Using Docker (Pre-built Image from GHCR)
+
+#### Pull and tag the image
+Pull the image from GHCR and give it a short local tag (`y2h_scores`) for cleaner commands:
+```bash
+docker pull ghcr.io/wiselab2/y2h-scores:latest
+docker tag ghcr.io/wiselab2/y2h-scores:latest y2h_scores
+```
+
+#### Check CLI options
+```bash
+docker run --rm y2h_scores --help
+```
+
+#### Run on the toy dataset
+From the `Software/` directory, mount the current directory into `/data` and set `/data` as the container working directory (`-w /data`) so the relative paths inside `toy_dataset/fofn_for_compute_scores.txt` resolve properly:
+
+```bash
+cd Y2H-SCORES/Software
+
+docker run --rm \
+  -v "$(pwd):/data" \
+  -w /data \
+  y2h_scores \
+  --fofn "toy_dataset/fofn_for_compute_scores.txt" \
+  --out_dir "output_toy_dataset/" \
+  --spec_p_val 0.5 \
+  --spec_fold_change 2 \
+  --enrich_p_val 0.5 \
+  --enrich_fold_change 0 \
+  --normalized F
+```
+
+#### Run on your own data
+If your configuration and NGPINT output files use absolute host paths (e.g., under `/path/to/project`), mount that directory at the same path inside the container (or use paths relative to `/data` with `-w /data`):
+
+```bash
+docker run --rm \
+  -v "/path/to/project:/path/to/project" \
+  -w "/path/to/project" \
+  y2h_scores \
+  --fofn "/path/to/project/fofn_for_compute_scores.txt" \
+  --out_dir "/path/to/project/scores_output/" \
+  --spec_p_val 0.05 \
+  --spec_fold_change 1 \
+  --enrich_p_val 0.05 \
+  --enrich_fold_change 0 \
+  --normalized F
+```
+
+---
+
+### 2. Building from the `Dockerfile` Locally
+
+If you want to build the Docker image locally from `Software/Dockerfile`:
+
+```bash
+# From the repository root:
+docker build -t y2h_scores ./Software
+
+# Or from inside Software/:
+cd Y2H-SCORES/Software
+docker build -t y2h_scores .
+```
+
+Run the locally built image the same way:
+
+```bash
+cd Y2H-SCORES/Software
+
+docker run --rm \
+  -v "$(pwd):/data" \
+  -w /data \
+  y2h_scores \
+  --fofn "toy_dataset/fofn_for_compute_scores.txt" \
+  --out_dir "output_toy_dataset/" \
+  --spec_p_val 0.5 \
+  --spec_fold_change 2 \
+  --enrich_p_val 0.5 \
+  --enrich_fold_change 0 \
+  --normalized F
+```
+
+---
+
+### 3. Obtaining the Apptainer / Singularity `.sif` Container
+
+You can either pull the pre-built native `.sif` image directly from GHCR via ORAS (fastest) or build a `.sif` locally from the Docker image.
+
+#### Option A: Pull the pre-built `.sif` via ORAS (Recommended)
+```bash
+apptainer pull y2h_scores.sif oras://ghcr.io/wiselab2/y2h-scores-sif:latest
+```
+
+#### Option B: Build a `.sif` from the GHCR Docker image
+```bash
+apptainer build y2h_scores.sif docker://ghcr.io/wiselab2/y2h-scores:latest
+```
+
+#### Option C: Build a `.sif` from a local Docker daemon image
+If you tagged or built `y2h_scores` locally with Docker:
+```bash
+apptainer build y2h_scores.sif docker-daemon://y2h_scores:latest
+```
+
+---
+
+### 4. Executing Y2H-SCORES with Apptainer and the `.sif` File
+
+By default, Apptainer automatically bind-mounts and preserves your current working directory on the host, while `run_scores.R` resolves its internal helper scripts from `/opt/Y2H-SCORES` inside the SIF.
+
+#### Check CLI options
+```bash
+apptainer run y2h_scores.sif --help
+```
+
+#### Run the `.sif` on the toy dataset
+```bash
+cd Y2H-SCORES/Software
+
+apptainer run y2h_scores.sif \
+  --fofn "toy_dataset/fofn_for_compute_scores.txt" \
+  --out_dir "output_toy_dataset/" \
+  --spec_p_val 0.5 \
+  --spec_fold_change 2 \
+  --enrich_p_val 0.5 \
+  --enrich_fold_change 0 \
+  --normalized F
+```
+
+*(You can also execute the `.sif` file directly: `./y2h_scores.sif --fofn ...`)*
+
+#### Run the `.sif` on HPC / external directories
+If your NGPINT outputs and configuration files live on a shared cluster filesystem outside your home/current directory (such as `/scratch` or `/work`), pass `--bind` (`-B`) so Apptainer mounts that path inside the container:
+
+```bash
+apptainer run \
+  --bind /scratch/my_y2h_project:/scratch/my_y2h_project \
+  y2h_scores.sif \
+  --fofn "/scratch/my_y2h_project/fofn_for_compute_scores.txt" \
+  --out_dir "/scratch/my_y2h_project/scores_output/" \
+  --spec_p_val 0.05 \
+  --spec_fold_change 1 \
+  --enrich_p_val 0.05 \
+  --enrich_fold_change 0 \
+  --normalized F
+```
+
+#### Run directly without pre-downloading a `.sif` file
+Apptainer can also execute the remote ORAS or Docker image directly (caching it in `~/.apptainer/cache`):
+
+```bash
+apptainer run oras://ghcr.io/wiselab2/y2h-scores-sif:latest --help
+```
+
+
 
